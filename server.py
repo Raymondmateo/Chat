@@ -7,6 +7,7 @@ import json
 import signal
 import os
 import logging
+from lib import gen_word_packet, close_socket
 
 clients_lock = threading.Lock()
 buff_lock = threading.Lock()
@@ -16,14 +17,11 @@ shutting_down = False
 temp = 0
 server_socket = None
 
-logging.basicConfig(filename='server_log.txt', level=logging.INFO, format='%(asctime)s - %(messa\
-ge)s')
-
+logging.basicConfig(filename='server_log.txt', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 def print_log(message, level=logging.INFO):
     logging.log(level, message)
     print(message)
-
 
 def send_messages(client_sender, message):
     word_pkt = gen_word_packet(message)
@@ -32,11 +30,9 @@ def send_messages(client_sender, message):
             if client[1] != client_sender:
                 client[1].sendall(word_pkt)
 
-
 def send_message(client, message):
     word_pkt = gen_word_packet(message)
     client.sendall(word_pkt)
-
 
 def approve_client(client):
     name = None
@@ -63,13 +59,10 @@ def approve_client(client):
             break
     if name:
         clients.append((name, client))
-        send_message(client, ("APP", f"Congratulations! {name}, You can now send and receive messa\
-ges"))
-        print_log(
-            f"CONNECTED - ID: {name}, IP Address: {client.getpeername()}")
+        send_message(client, ("APP", f"Congratulations! {name}, You can now send and receive messages"))
+        print_log(f"CONNECTED - ID: {name}, IP Address: {client.getpeername()}")
         receive_thread = threading.Thread(target=go, args=(client,))
         receive_thread.start()
-
 
 def go(client):
     while True:
@@ -82,43 +75,28 @@ def go(client):
         data_length = int.from_bytes(combined_data[:2], byteorder='big')
         json_data = combined_data[2:2+data_length].decode('utf-8')
         received_message = json.loads(json_data)
-        send_thread = threading.Thread(target=send_messages, args=(
-            client, (client_name[0], received_message['message']),))
+        send_thread = threading.Thread(target=send_messages, args=(client, (client_name[0], received_message['message']),))
         send_thread.start()
         with buff_lock:
             buff.append(received_message)
             print_log(f"ID: {client_name}, Message: {received_message}")
             print(f"Received message: {buff}")
 
-
 def receive_messages(client):
     try:
-        approve_thread = threading.Thread(
-            target=approve_client, args=(client,))
+        approve_thread = threading.Thread(target=approve_client, args=(client,))
         approve_thread.start()
 
     except Exception as e:
         print(f"Error receiving message: {e}")
-
-
-def gen_word_packet(word):
-    try:
-        json_data = json.dumps(word)
-        combined_data = len(json_data).to_bytes(
-            2, byteorder='big') + json_data.encode('utf-8')
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return combined_data
-
 
 def accept_clients(s_sock):
     try:
         while True:
             client, addr = s_sock.accept()
             if client:
-                time.sleep(.1)  # Hello message will not diplsay if omitted
-                send_message(
-                    client, ("CHAT APP:", "Hello,Please Enter Username"))
+                time.sleep(.1)  # Hello message will not display if omitted
+                send_message(client, ("CHAT APP:", "Hello,Please Enter Username"))
                 receive_messages(client)
                 print_log(f"Accepted connection from {addr}")
     except KeyboardInterrupt:
@@ -134,7 +112,6 @@ def accept_clients(s_sock):
         print("Server socket closed.")
         sys.exit(1)
 
-
 def run_server(port):
     global server_socket
     try:
@@ -147,15 +124,13 @@ def run_server(port):
         accept_thread = threading.Thread(target=accept_clients, args=(s_sock,))
         accept_thread.start()
         accept_thread.join()
-        # Wait for the accept thread to finish (this will never happen in this example
+        # Wait for the accept thread to finish (this will never happen in this example)
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
         print("Closing server.")
 
-
 shutting_down = False
-
 
 def signal_handler(sig, frame):
     global shutting_down, shutdown_flag, server_socket
@@ -165,8 +140,7 @@ def signal_handler(sig, frame):
         # Send a shutdown message to all clients
         shutdown_message = "Server is shutting down. Closing in 10 seconds"
         try:
-            send_thread = threading.Thread(
-                target=send_messages, args=(shutdown_message,))
+            send_thread = threading.Thread(target=send_messages, args=(shutdown_message,))
             send_thread.start()
             send_thread.join()
             print(clients)
@@ -182,7 +156,6 @@ def signal_handler(sig, frame):
         print(clients)
         server_socket.close()
         os._exit(0)
-
 
 signal.signal(signal.SIGINT, signal_handler)
 
