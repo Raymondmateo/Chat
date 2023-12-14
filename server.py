@@ -19,10 +19,23 @@ server_socket = None
 
 logging.basicConfig(filename='server_log.txt', level=logging.INFO, format='%(asctime)s - %(message)s')
 
+"""
+    Function Name:  print_log
+    Description:    Logs a message and prints it to the console.
+    Parameters:     message - The message to be logged and printed.
+                    level - The logging level (default: INFO).
+    Returns:        None
+"""
 def print_log(message, level=logging.INFO):
     logging.log(level, message)
     print(message)
 
+"""
+    Function Name:  send_messages
+    Description:    Sends a message to all connected clients.
+    Parameters:     message - The message to be sent.
+    Returns:        None
+"""
 def send_messages(client_sender, message):
     word_pkt = gen_word_packet(message)
     with clients_lock:
@@ -30,10 +43,23 @@ def send_messages(client_sender, message):
             if client[1] != client_sender:
                 client[1].sendall(word_pkt)
 
+"""
+    Function Name:  send_message
+    Description:    Sends a message to a specific client.
+    Parameters:     client - The client socket.
+                    message - The message to be sent.
+    Returns:        None
+"""
 def send_message(client, message):
     word_pkt = gen_word_packet(message)
     client.sendall(word_pkt)
 
+"""
+    Function Name:  approve_client
+    Description:    Handles the approval process for a new client.
+    Parameters:     client - The client socket.
+    Returns:        None
+"""
 def approve_client(client):
     name = None
     while True:
@@ -64,6 +90,12 @@ def approve_client(client):
         receive_thread = threading.Thread(target=go, args=(client,))
         receive_thread.start()
 
+"""
+    Function Name:  go
+    Description:    Handles receiving messages from a client.
+    Parameters:     client - The client socket.
+    Returns:        None
+"""
 def go(client):
     while True:
         combined_data = client.recv(4096)
@@ -81,7 +113,12 @@ def go(client):
             buff.append(received_message)
             print_log(f"ID: {client_name}, Message: {received_message}")
             print(f"Received message: {buff}")
-
+"""
+    Function Name:  receive_messages
+    Description:    Initiates the approval process for a new client.
+    Parameters:     client - The client socket.
+    Returns:        None
+"""
 def receive_messages(client):
     try:
         approve_thread = threading.Thread(target=approve_client, args=(client,))
@@ -90,6 +127,12 @@ def receive_messages(client):
     except Exception as e:
         print(f"Error receiving message: {e}")
 
+"""
+    Function Name:  accept_clients
+    Description:    Accepts incoming client connections.
+    Parameters:     s_sock - The server socket.
+    Returns:        None
+"""
 def accept_clients(s_sock):
     try:
         while True:
@@ -112,6 +155,12 @@ def accept_clients(s_sock):
         print("Server socket closed.")
         sys.exit(1)
 
+"""
+    Function Name:  run_server
+    Description:    Initializes and runs the server.
+    Parameters:     port - The port number.
+    Returns:        None
+"""
 def run_server(port):
     global server_socket
     try:
@@ -132,6 +181,13 @@ def run_server(port):
 
 shutting_down = False
 
+"""
+    Function Name:  signal_handler
+    Description:    Handles signals (e.g., Ctrl+C) to gracefully shut down the server.
+    Parameters:     sig - The signal number.
+                    frame - The current stack frame.
+    Returns:        None
+"""
 def signal_handler(sig, frame):
     global shutting_down, shutdown_flag, server_socket
     if not shutting_down:
