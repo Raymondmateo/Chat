@@ -13,6 +13,7 @@ import sys
 import socket
 import threading
 import json
+from textView import InputApp
 from lib import gen_word_packet, close_socket
 
 messages = []
