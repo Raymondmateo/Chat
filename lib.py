@@ -8,13 +8,9 @@ import os
 import logging
 
 """
-Generate a packet containing a serialized JSON word.
-
-Parameters:
-- word: The word to be serialized.
-
-Returns:
-Combined binary data.
+Function Name:  close_socket
+Parameters:     word: The word to be serialized.
+Returns:        combined_data - Combined binary data
 """
 def gen_word_packet(word):
     try:
@@ -24,6 +20,11 @@ def gen_word_packet(word):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+"""
+Function Name:  close_socket
+Parameters:     sock - the socket being closed.
+Returns:        none
+"""
 def close_socket(sock):
     try:
         sock.close()
