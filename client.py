@@ -9,8 +9,6 @@ from lib import gen_word_packet, handle_error
 messages = []
 app_lock = threading.Lock()
 messages_lock = threading.Lock()
-proc_stdout = sys.stdout
-
 
 def receive_thread(sock, app):
     try:
@@ -35,29 +33,21 @@ def receive_thread(sock, app):
 
 def run_client(server_address, server_port):
     try:
-        with open('logs.txt', 'w') as file:
-            sys.stdout = file
-            c_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            c_sock.connect((server_address, server_port))
-            print(f"Connected to server at {server_address}:{server_port}")
-            app = InputApp(c_sock)
-            run_thread = threading.Thread(
-                target=receive_thread, args=(c_sock, app,))
-            run_thread.start()
-
-            app.run()
-
-            run_thread.join()
+        c_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        c_sock.connect((server_address, server_port))
+        print(f"Connected to server at {server_address}:{server_port}")
+        app = InputApp(c_sock)
+        run_thread = threading.Thread(
+        target=receive_thread, args=(c_sock, app,))
+        run_thread.start()
+        app.run()
+        run_thread.join()
     except Exception as e:
         handle_error("An error occurred", e)
     finally:
         close_socket(c_sock)
         print("Client socket closed.")
-        file.close()
-        proc_stdout.write('\033c')
-        proc_stdout.flush()
-
-
+        
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: ./client.py <server_address> <server_port>")
