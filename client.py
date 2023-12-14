@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
-# import subprocess
+# client.py
+import json
+import threading
 import sys
 import socket
-import struct
-import threading
-import json
-from textView import InputApp
+from lib import gen_word_packet, handle_error
 
 messages = []
 app_lock = threading.Lock()
-
 messages_lock = threading.Lock()
 proc_stdout = sys.stdout
-
-
-def gen_word_packet(word):
-    try:
-        json_data = json.dumps(word)
-        combined_data = len(json_data).to_bytes(2, byteorder='big') + json_data.encode('ut\
-                                                                                       f-8')
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return combined_data
 
 
 def receive_thread(sock, app):
@@ -31,19 +19,17 @@ def receive_thread(sock, app):
             if not combined_data:
                 print("NO message")
                 break
-          # You might need to adjust the buffer size
+            # You might need to adjust the buffer size
             data_length = int.from_bytes(combined_data[:2], byteorder='big')
             json_data = combined_data[2:2+data_length].decode('utf-8')
-        # Deserialize the JSON data back into a tuple
+            # Deserialize the JSON data back into a tuple
             received_tuple = tuple(json.loads(json_data))
             with messages_lock and app_lock:
                 messages.append(received_tuple)
                 app.append_message(received_tuple)
-                # display_message(received_tuple)
-
                 print(f"Received word: {received_tuple}")
     except Exception as e:
-        print(f"Error receiving word packet: {e}")
+        handle_error("Error receiving word packet", e)
         return None
 
 
@@ -63,9 +49,9 @@ def run_client(server_address, server_port):
 
             run_thread.join()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        handle_error("An error occurred", e)
     finally:
-        c_sock.close()
+        close_socket(c_sock)
         print("Client socket closed.")
         file.close()
         proc_stdout.write('\033c')
@@ -87,11 +73,3 @@ if __name__ == "__main__":
         sys.exit(1)
 
     run_client(server_address, server_port)
-
-
-
-
-
-
-
-
