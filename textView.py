@@ -36,11 +36,24 @@ class InputApp(App):
                                                                                                  
     """
 
+    """
+        Function Name:  __init__
+        Description:    Initializes an instance of the InputApp class.
+        Parameters:     sock - The socket object.
+        Returns:        None
+    """
     def __init__(self, sock):
         super().__init__()
         self.messages = []
         self.socket = sock
 
+    """
+        Function Name:  display_messages
+        Description:    Displays messages in the application log.
+        Parameters:     new_message - Boolean indicating whether it's a new message.
+                        a_message - The message to be displayed.
+        Returns:        None
+    """
     def display_messages(self, new_message=False, a_message="") -> None:
         try:
             log = self.query_one(Log)
@@ -52,11 +65,23 @@ class InputApp(App):
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    """
+        Function Name:  append_message
+        Description:    Appends a message to the messages list and displays it.
+        Parameters:     a_message - The message to be appended and displayed.
+        Returns:        None
+    """
     def append_message(self, a_message) -> None:
         name, message = a_message
         self.messages.append((name, message))
         self.display_messages(True, f"{name}: {message}")
 
+    """
+        Function Name:  push_message
+        Description:    Sends a message over the socket.
+        Parameters:     message - The message to be sent.
+        Returns:        None
+    """
     def push_message(self, message) -> None:
         if message:
             data = {'message': message}
@@ -64,6 +89,12 @@ class InputApp(App):
             self.socket.sendall(word)
             self.display_messages(True, message)
 
+    """
+        Function Name:  open_log
+        Description:    Opens the log file for writing.
+        Parameters:     None
+        Returns:        None
+    """
     def open_log():
         try:
             with open("logs.txt", "w") as file:
@@ -71,6 +102,12 @@ class InputApp(App):
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    """
+        Function Name:  compose
+        Description:    Composes the user interface elements.
+        Parameters:     None
+        Returns:        ComposeResult
+    """
     def compose(self) -> ComposeResult:
         yield Label("CHAT APP")
         yield Log()
@@ -79,6 +116,12 @@ class InputApp(App):
                     type="text",
                     )
 
+    """
+        Function Name:  show_invalid_reasons
+        Description:    Handles the submission event, updating UI for validation failures.
+        Parameters:     event - The Input.Submitted event.
+        Returns:        None
+    """
     @on(Input.Submitted)
     def submit(self, event: Input.Submitted) -> None:
         log = self.query_one(Log)
