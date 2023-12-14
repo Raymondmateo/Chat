@@ -175,8 +175,7 @@ def run_server(port):
     global server_socket
     try:
         s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # I tried not hard coding it but it just never connects
-        s_sock.bind(("0.0.0.0", port))
+        s_sock.bind(("", port))
         s_sock.listen(5)
         server_socket = s_sock
         print(f"Server is listening on port {port}...")
