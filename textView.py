@@ -6,32 +6,33 @@ from textual import on
 from textual.app import App, ComposeResult
 from textual.validation import Function, Number, ValidationResult, Validator
 from textual.widgets import Input, Label, Pretty, Placeholder, Log
+import json
 
 
 class InputApp(App):
 
-    CSS = """                                                                                                                                                                                    
-    Input.-valid {                                                                                                                                                                               
-        border: tall $success 60%;                                                                                                                                                               
-    }                                                                                                                                                                                            
-    Input.-valid:focus {                                                                                                                                                                         
-        border: tall $success;                                                                                                                                                                   
-    }                                                                                                                                                                                            
-    Input {                                                                                                                                                                                      
-        margin: 1 1;                                                                                                                                                                             
-    }                                                                                                                                                                                            
-    Label {                                                                                                                                                                                      
-        margin: 1 2;                                                                                                                                                                             
-    }                                                                                                                                                                                            
-    Pretty {                                                                                                                                                                                     
-        margin: 1 2;                                                                                                                                                                             
-    }                                                                                                                                                                                            
-    Log{                                                                                                                                                                                         
-                                                                                                                                                                                                 
-     padding: 1 2 0 2;                                                                                                                                                                           
-    }                                                                                                                                                                                            
-                                                                                                                                                                                                 
-                                                                                                                                                                                                 
+    CSS = """                                                                                                 
+    Input.-valid {                                                                                            
+        border: tall $success 60%;                                                                            
+    }                                                                                                         
+    Input.-valid:focus {                                                                                      
+        border: tall $success;                                                                                
+    }                                                                                                         
+    Input {                                                                                                   
+        margin: 1 1;                                                                                          
+    }                                                                                                         
+    Label {                                                                                                   
+        margin: 1 2;                                                                                          
+    }                                                                                                         
+    Pretty {                                                                                                  
+        margin: 1 2;                                                                                          
+    }                                                                                                         
+    Log{                                                                                                      
+                                                                                                              
+     padding: 1 2 0 2;                                                                                        
+    }                                                                                                         
+                                                                                                              
+                                                                                                              
     """
 
     def __init__(self, sock):
@@ -51,22 +52,24 @@ class InputApp(App):
             print(f"An error occurred: {e}")
 
     def append_message(self, a_message) -> None:
-        self.messages.append(a_message)
-        self.display_messages(True, a_message)
+        name, message = a_message
+        self.messages.append((name, message))
+        self.display_messages(True, f"{name}: {message}")
 
     def push_message(self, message) -> None:
         if message:
-            word = self.gen_word_packet(message)
+            data = {'message': message}
+            word = self.gen_word_packet(data)
             self.socket.sendall(word)
 
     def gen_word_packet(self, word):
         try:
-            word_bytes = word.encode('utf-8')
-            pkt_len = len(word_bytes)
-            len_bytes = struct.pack('>H', pkt_len)
+            json_data = json.dumps(word)
+            combined_data = len(json_data).to_bytes(
+                2, byteorder='big') + json_data.encode('utf-8')
+            return combined_data
         except Exception as e:
             print(f"An error occurred: {e}")
-        return len_bytes + word_bytes
 
     def open_log():
         try:
@@ -82,6 +85,7 @@ class InputApp(App):
         yield Label("Enter Message")
         yield Input(
             placeholder="HELLO FROM CHAT APP",
+
             type="text",
             #  validate_on=["submitted"],
             validators=[
