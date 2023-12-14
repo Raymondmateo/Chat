@@ -7,16 +7,16 @@ import time
 import os
 import logging
 
+"""
+Generate a packet containing a serialized JSON word.
+
+Parameters:
+- word: The word to be serialized.
+
+Returns:
+Combined binary data.
+"""
 def gen_word_packet(word):
-    """
-    Generate a packet containing a serialized JSON word.
-
-    Parameters:
-    - word: The word to be serialized.
-
-    Returns:
-    Combined binary data.
-    """
     try:
         json_data = json.dumps(word)
         combined_data = len(json_data).to_bytes(2, byteorder='big') + json_data.encode('utf-8')
