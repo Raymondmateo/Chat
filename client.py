@@ -9,6 +9,13 @@ messages = []
 app_lock = threading.Lock()
 messages_lock = threading.Lock()
 
+"""
+    Function Name:  receive_thread
+    Description:    Handles the reception of messages from the server.
+    Parameters:     sock - The client socket.
+                    app - The InputApp instance for message handling.
+    Returns:        None
+"""
 def receive_thread(sock, app):
     try:
         while True:
@@ -28,6 +35,13 @@ def receive_thread(sock, app):
         print(f"Error receiving word packet: {e}")
         return None
 
+"""
+    Function Name:  run_client
+    Description:    Establishes a connection to the server and starts the client application.
+    Parameters:     server_address - The IP address of the server.
+                    server_port - The port number of the server.
+    Returns:        None
+"""
 def run_client(server_address, server_port):
     try:
         c_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
