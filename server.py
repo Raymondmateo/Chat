@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import sys
 import socket
-import random
-import struct
 import time
 import threading
 import json
@@ -18,8 +16,8 @@ shutting_down = False
 temp = 0
 server_socket = None
 
-logging.basicConfig(filename='server_log.txt',
-                    level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(filename='server_log.txt', level=logging.INFO, format='%(asctime)s - %(messa\
+ge)s')
 
 
 def print_log(message, level=logging.INFO):
@@ -27,11 +25,12 @@ def print_log(message, level=logging.INFO):
     print(message)
 
 
-def send_messages(message):
+def send_messages(client_sender, message):
     word_pkt = gen_word_packet(message)
     with clients_lock:
         for client in clients:
-            client[1].sendall(word_pkt)
+            if client[1] != client_sender:
+                client[1].sendall(word_pkt)
 
 
 def send_message(client, message):
@@ -56,16 +55,16 @@ def approve_client(client):
         continue_while = False
         with clients_lock:
             for existing_name, _ in clients:
-                if name == existing_name:
-                    send_message(client, ("ee", "Unavailable Username"))
+                if name == existing_name and "CHAT APP":
+                    send_message(client, ("CHAT APP:", "Unavailable Username"))
                     continue_while = True
                     break
         if not continue_while:  # Continue to the next iteration of the while loop
             break
     if name:
         clients.append((name, client))
-        send_message(
-            client, ("APP", f"Congratulations! {name}, You can now send and receive messages"))
+        send_message(client, ("APP", f"Congratulations! {name}, You can now send and receive messa\
+ges"))
         print_log(
             f"CONNECTED - ID: {name}, IP Address: {client.getpeername()}")
         receive_thread = threading.Thread(target=go, args=(client,))
@@ -79,15 +78,16 @@ def go(client):
             clients[:] = [tup for tup in clients if tup[1] != client]
             print_log(f"DISCONNECTED - IP Address: {client.getpeername()}")
             break
+        client_name = [name for name, elt in clients if elt == client]
         data_length = int.from_bytes(combined_data[:2], byteorder='big')
         json_data = combined_data[2:2+data_length].decode('utf-8')
         received_message = json.loads(json_data)
         send_thread = threading.Thread(target=send_messages, args=(
-            ("NAME", received_message['message']),))
+            client, (client_name[0], received_message['message']),))
         send_thread.start()
         with buff_lock:
             buff.append(received_message)
-            print_log(f"ID: {received_tuple}, Message: {received_tuple}")
+            print_log(f"ID: {client_name}, Message: {received_message}")
             print(f"Received message: {buff}")
 
 
@@ -117,7 +117,8 @@ def accept_clients(s_sock):
             client, addr = s_sock.accept()
             if client:
                 time.sleep(.1)  # Hello message will not diplsay if omitted
-                send_message(client, ("dd", "Hello,Please Enter Username"))
+                send_message(
+                    client, ("CHAT APP:", "Hello,Please Enter Username"))
                 receive_messages(client)
                 print_log(f"Accepted connection from {addr}")
     except KeyboardInterrupt:
@@ -132,24 +133,20 @@ def accept_clients(s_sock):
         s_sock.close()
         print("Server socket closed.")
         sys.exit(1)
-        # Start a new thread to receive messages from the client
 
 
 def run_server(port):
     global server_socket
     try:
         s_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # I tried not hard coding it but it just never connects
         s_sock.bind(("0.0.0.0", port))
         s_sock.listen(5)
         server_socket = s_sock
         print(f"Server is listening on port {port}...")
-
         accept_thread = threading.Thread(target=accept_clients, args=(s_sock,))
         accept_thread.start()
-
         accept_thread.join()
-        # Start a thread to accept clients
-
         # Wait for the accept thread to finish (this will never happen in this example
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -178,6 +175,11 @@ def signal_handler(sig, frame):
         # Wait for some time before closing
         time.sleep(2)
         print("Closing server gracefully.")
+        with clients_lock:
+            for elt in clients:
+                elt[1].close()
+            clients.clear()
+        print(clients)
         server_socket.close()
         os._exit(0)
 
@@ -188,17 +190,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: ./server <port>")
         sys.exit(1)
-
-    try:
-        port = int(sys.argv[1])
-        if not (10000 < port < 65535):
-            raise ValueError("Port should be between 10000 and 65535.")
-    except KeyboardInterrupt:
-        signal_handler(signal.SIGINT, None)
-    except ValueError:
-        print("Invalid port number. Please provide a valid port between 10000 and 65535.")
-        sys.exit(1)
-
     try:
         port = int(sys.argv[1])
         if not (10000 < port < 65535):
