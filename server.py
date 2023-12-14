@@ -1,3 +1,13 @@
+"""
+    Author:            Jake Casey, Jevaughn Stewart, Raymond Mateo
+    Creation Date:     Nov. 24, 2023
+    Due Date:          Dec. 14, 2023
+    Course:            CSC 328 010
+    Professor Name:    Dr. Schwesinger
+    Assignment:        Chat Server
+    Filename:          server.py
+    Purpose:           The server-side that connects to the server 
+"""
 #!/usr/bin/env python3
 import sys
 import socket
