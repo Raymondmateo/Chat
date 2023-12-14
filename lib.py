@@ -22,10 +22,10 @@ def gen_word_packet(word):
         combined_data = len(json_data).to_bytes(2, byteorder='big') + json_data.encode('utf-8')
         return combined_data
     except Exception as e:
-        handle_error("An error occurred", e)
+        print(f"An error occurred: {e}")
 
 def close_socket(sock):
     try:
         sock.close()
     except Exception as e:
-        handle_error("Error closing socket", e)
+        print(f"Error closing socket: {e}")
