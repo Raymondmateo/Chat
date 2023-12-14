@@ -1,3 +1,13 @@
+"""
+    Author:            Jake Casey, Jevaughn Stewart, Raymond Mateo
+    Creation Date:     Nov. 24, 2023
+    Due Date:          Dec. 14, 2023
+    Course:            CSC 328 010
+    Professor Name:    Dr. Schwesinger
+    Assignment:        Chat Server
+    Filename:          lib.py
+    Purpose:           The library is used for certain functions.
+"""
 import json
 import threading
 import sys
