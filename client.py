@@ -1,25 +1,13 @@
 #!/usr/bin/env python3
 import sys
 import socket
-import struct
 import threading
 import json
-from textView import InputApp
+from lib import gen_word_packet, close_socket
+
 messages = []
 app_lock = threading.Lock()
-
 messages_lock = threading.Lock()
-
-
-def gen_word_packet(word):
-    try:
-        json_data = json.dumps(word)
-        combined_data = len(json_data).to_bytes(2, byteorder='big') + json_data.encode('ut\
-                                                                                       f-8')
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return combined_data
-
 
 def receive_thread(sock, app):
     try:
@@ -40,7 +28,6 @@ def receive_thread(sock, app):
         print(f"Error receiving word packet: {e}")
         return None
 
-
 def run_client(server_address, server_port):
     try:
         c_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,9 +42,8 @@ def run_client(server_address, server_port):
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        c_sock.close()
+        close_socket(c_sock)
         print("Client socket closed.")
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
