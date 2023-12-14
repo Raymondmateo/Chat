@@ -7,6 +7,7 @@ from textual.app import App, ComposeResult
 from textual.validation import Function, Number, ValidationResult, Validator
 from textual.widgets import Input, Label, Pretty, Placeholder, Log
 import json
+from lib import gen_word_packet
 
 
 class InputApp(App):
@@ -59,18 +60,9 @@ class InputApp(App):
     def push_message(self, message) -> None:
         if message:
             data = {'message': message}
-            word = self.gen_word_packet(data)
+            word = gen_word_packet(data)  # Use the imported function
             self.socket.sendall(word)
             self.display_messages(True, message)
-
-    def gen_word_packet(self, word):
-        try:
-            json_data = json.dumps(word)
-            combined_data = len(json_data).to_bytes(2, byteorder='big') + json_data.encode('utf-\
-8')
-            return combined_data
-        except Exception as e:
-            print(f"An error occurred: {e}")
 
     def open_log():
         try:
